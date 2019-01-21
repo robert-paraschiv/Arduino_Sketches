@@ -15,7 +15,7 @@ const char* password = "hitler321"; //enter your network password here
 
 ESP8266WebServer server(80);
 
-const int led = BUILTIN_LED;
+const int led = 2;
 
 // this function is what gets called if you enter the base ip address of your Wemos in the browser
 void handleRoot() {
