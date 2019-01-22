@@ -1,60 +1,33 @@
 #include <ESP8266WiFi.h>
-#include <WiFiClient.h>
 #include <ESP8266WebServer.h>
-#include <ESP8266mDNS.h>
+#include <Wire.h>  
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+
 
 #define OLED_Address 0x3C
 Adafruit_SSD1306 oled(1);
 
-#include <Wire.h>  
+ESP8266WebServer server;
 
-const char* ssid = "2.4 Ghz Rokudo"; //enter your SSID here
-const char* password = "hitler321"; //enter your network password here
+char* ssid = "2.4 Ghz Rokudo";
+char* password = "hitler321";
 
-ESP8266WebServer server(80);
 
-const int led = 2;
-
-// this function is what gets called if you enter the base ip address of your Wemos in the browser
-void handleRoot() {
-  digitalWrite(led, 1);
-  server.send(200, "text/plain", "hello from esp8266!");
-  digitalWrite(led, 0);
-}
-
-// this gets called if no function is for your address
-void handleNotFound() {
-  digitalWrite(led, 1);
-  String message = "File Not Found\n\n";
-  message += "URI: ";
-  message += server.uri();
-  message += "\nMethod: ";
-  message += (server.method() == HTTP_GET) ? "GET" : "POST";
-  message += "\nArguments: ";
-  message += server.args();
-  message += "\n";
-  for (uint8_t i = 0; i < server.args(); i++) {
-    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
-  }
-  server.send(404, "text/plain", message);
-  digitalWrite(led, 0);
-}
-
-void setup(void) {
-  oled.begin(SSD1306_SWITCHCAPVCC, OLED_Address);
-  pinMode(led, OUTPUT);
-  digitalWrite(led, 0);
-  Serial.begin(115200);
+void setup() {  
+  oled.begin(SSD1306_SWITCHCAPVCC, OLED_Address);    
+  oled.clearDisplay();
+  oled.setTextColor(WHITE);
+  oled.setCursor(0, 0);
+  
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
-  Serial.println("");
-
-  // Wait for connection
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
+  
+  Serial.begin(115200);
+  while(WiFi.status()!=WL_CONNECTED)
+  {
     Serial.print(".");
+    delay(500);
   }
   Serial.println("");
   Serial.print("Connected to ");
@@ -62,29 +35,19 @@ void setup(void) {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
-  if (MDNS.begin("esp8266")) {
-    Serial.println("MDNS responder started");
-  }
-
-  server.on("/", handleRoot);
-
+  server.on("/",[](){
+    server.send(200,"text/plain","Heyya Meit !");
+    });
   server.on("/update", handleUpdateCall);
-
-  server.on("/inline", []() {
-    server.send(200, "text/plain", "this works as well");
-  });
-
-  server.onNotFound(handleNotFound);
-
   server.begin();
-  oled.clearDisplay();
-
+  
   // display the server ip address on the screen upon wifi connection
   oled.println("HTTP Server Started:\n" + WiFi.localIP().toString());
   oled.display();
 }
 
-void loop(void) {
+void loop() {
+  
   oled.setTextColor(WHITE);
   oled.setCursor(0, 0);
   server.handleClient();
@@ -110,5 +73,5 @@ void handleUpdateCall() {
   
   }
   
-  server.send(200, "text/plain", "OK");          //Returns the HTTP response
+  server.send(200, "text/plain", message);          //Returns the HTTP response
 }
